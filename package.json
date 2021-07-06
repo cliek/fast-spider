@@ -1,0 +1,25 @@
+{
+  "name": "fast-spider",
+  "version": "1.0.0",
+  "keywords": [
+    "spider",
+    "clawer",
+    "spider-node"
+  ],
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/polyfill": "^7.12.1",
+    "global": "^4.4.0",
+    "signale": "^1.4.0"
+  },
+  "scripts": {
+    "start": "./node_modules/.bin/babel-node --presets @babel/env ./index.js"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.14.5",
+    "@babel/core": "^7.14.6",
+    "@babel/node": "^7.14.7",
+    "@babel/preset-env": "^7.14.7"
+  }
+}
