@@ -1,6 +1,8 @@
-import { sizeQM } from './lib/queue'
+import { sizeQM,getQM } from './lib/queue'
+import logs from "./lib/utils/logs"
 import { addTask } from './lib/task'
 import C from './lib/consumer'
+import fs from "fs"
 // import './config'
 // import { addTask, removeTask } from './lib/task'
 // qm.size()
@@ -50,18 +52,20 @@ addTask('A', function(next, arg){
     new Array(arg.num).fill('x').map((s,i)=>{
         next('B', {
             num: i+1
-        })
+        });
     })
-    console.log(sizeQM());
+    console.log(getQM())
 })
 
 addTask('B', function(next, arg){
-    console.log("b", arg)
+    logs.success("b", arg)
+    console.log('b', arg)
+    fs.appendFileSync('./log.log', JSON.stringify(arg))
 })
 
-addTask('C', function(next, arg){
+// addTask('C', function(next, arg){
     
-})
+// })
 
 C.config({
     interval: 3000,

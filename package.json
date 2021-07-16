@@ -10,8 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
-    "global": "^4.4.0",
-    "signale": "^1.4.0"
+    "signale": "^1.4.0",
+    "uuid": "^8.3.2"
   },
   "scripts": {
     "start": "./node_modules/.bin/babel-node --presets @babel/env ./index.js"

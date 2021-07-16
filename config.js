@@ -1,6 +1,6 @@
 export default {
     // spider mode || 'sync' | 'flow'
-    mode: 'sync', 
+    mode: 'flow', 
     interval: 1000,
     
 }
