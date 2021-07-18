@@ -54,13 +54,12 @@ addTask('A', function(next, arg){
             num: i+1
         });
     })
-    console.log(getQM())
 })
 
 addTask('B', function(next, arg){
     logs.success("b", arg)
-    console.log('b', arg)
-    fs.appendFileSync('./log.log', JSON.stringify(arg))
+    // console.log('b', arg)
+    // fs.appendFileSync('./log.log', JSON.stringify(arg))
 })
 
 // addTask('C', function(next, arg){
@@ -68,8 +67,9 @@ addTask('B', function(next, arg){
 // })
 
 C.config({
-    interval: 3000,
-    mode: "sync"
+    interval: 1000,
+    mode: "sync",
+    cluster: 1
 }).start('A',{
     num: 10
 });
