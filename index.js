@@ -1,7 +1,7 @@
 import { sizeQM,getQM } from './lib/queue'
 import logs from "./lib/utils/logs"
 import { addTask } from './lib/task'
-import C from './lib/consumer'
+import { start } from './lib/consumer/cluster'
 import fs from "fs"
 // import './config'
 // import { addTask, removeTask } from './lib/task'
@@ -66,10 +66,6 @@ addTask('B', function(next, arg){
     
 // })
 
-C.config({
-    interval: 1000,
-    mode: "sync",
-    cluster: 1
-}).start('A',{
-    num: 10
-});
+// start('A',{
+//     num: 10
+// });

@@ -14,7 +14,8 @@
     "uuid": "^8.3.2"
   },
   "scripts": {
-    "start": "./node_modules/.bin/babel-node --presets @babel/env ./index.js"
+    "start": "./node_modules/.bin/babel-node --presets @babel/env ./index.js",
+    "debug": "./node_modules/.bin/babel-node --presets @babel/env ./lib/consumer/cluster.js"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.5",

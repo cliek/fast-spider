@@ -2,15 +2,15 @@ import { addTask } from '../../index'
 
 addTask('A', function(next){
     console.log("A")
-    next('a')
+    next('B')
 })
 
 addTask('B', function(next){
     console.log("B")
-    next('b')
+    next('C')
 })
 
 addTask('C', function(next){
     console.log("C")
-    next('c')
+    next('D')
 })
