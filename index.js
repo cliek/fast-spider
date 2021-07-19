@@ -1,8 +1,8 @@
-import { sizeQM,getQM } from './lib/queue'
+// import { sizeQM,getQM } from './lib/queue'
 import logs from "./lib/utils/logs"
-import { addTask } from './lib/task'
-import { start } from './lib/consumer/cluster'
-import fs from "fs"
+import { addTask } from './lib/index'
+// import { start } from './lib/consumer/cluster'
+// import fs from "fs"
 // import './config'
 // import { addTask, removeTask } from './lib/task'
 // qm.size()
@@ -46,7 +46,7 @@ import fs from "fs"
 // })
 
 // C.start('A',1);
-
+console.log(addTask);
 // example sync Tasks
 addTask('A', function(next, arg){
     new Array(arg.num).fill('x').map((s,i)=>{
@@ -65,7 +65,3 @@ addTask('B', function(next, arg){
 // addTask('C', function(next, arg){
     
 // })
-
-// start('A',{
-//     num: 10
-// });

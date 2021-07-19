@@ -1,9 +1,9 @@
 export default {
     // spider mode || 'sync' | 'flow'
-    mode: 'flow', 
-    interval: 1000,
-    cluster: 1,
-    start: {
+    mode: 'sync', 
+    interval: 3000,
+    clusterNum: 2,
+    startTask: {
         taskName: 'A',
         options: {
             num: 10
