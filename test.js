@@ -1,4 +1,9 @@
 import Comsumer from './lib/core'
 
 const C = new Comsumer();
-C.start();
+C.start({
+    taskName: "A",
+    data: {
+        num: 10
+    }
+});
