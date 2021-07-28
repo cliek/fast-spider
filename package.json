@@ -10,13 +10,15 @@
   "license": "MIT",
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
+    "cheerio": "^1.0.0-rc.10",
     "signale": "^1.4.0",
+    "superagent": "^6.1.0",
     "uuid": "^8.3.2"
   },
   "scripts": {
     "start": "./node_modules/.bin/babel-node --presets @babel/env ./index.js",
     "debug": "./node_modules/.bin/babel-node --presets @babel/env ./lib/consumer/cluster.js",
-    "test": "./node_modules/.bin/babel-node --presets @babel/env ./test.js"
+    "test": "./node_modules/.bin/babel-node --presets @babel/env ./example/test.js"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.5",
