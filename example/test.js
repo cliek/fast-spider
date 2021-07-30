@@ -5,7 +5,7 @@ const C = new Comsumer({
     interval: 100,
     taskPath: 'example/task/index',
     pipe: {
-        disabled: false,
+        enabled: true,
         type: 'json',
         dirPath: 'example/file'
     }

@@ -1,4 +1,4 @@
-const Task = require('../../lib/task/default');
+const Task = require('../../lib/task');
 
 const T = new Task();
 
@@ -16,7 +16,7 @@ T.addTask("A", function({requst, cheerio }, next){
 });
 
 T.addTask("B", function({params}, next){
-    console.log("B:" + params.title)
+    next(params)
 });
 
 // T.addTask("C", function({params}, next){
