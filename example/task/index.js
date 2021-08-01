@@ -2,8 +2,8 @@ const Task = require('../../lib/task');
 
 const T = new Task();
 
-T.addTask("A", function({requst, cheerio }, next){
-    requst.get('http://www.baidu.com').end((err, res)=>{
+T.addTask("A", function({request, cheerio }, next){
+    request.get('http://www.baidu.com').end((err, res)=>{
         if (res.ok) {
             let $ = cheerio.load(res.text)
             next("B", {
@@ -25,8 +25,8 @@ T.addTask("B", function({params}, next){
 //     })
 // });
 
-// T.addTask("D", function({params, requst , cheerio }){
-//     console.log(params, requst, cheerio)
+// T.addTask("D", function({params, request , cheerio }){
+//     console.log(params, request, cheerio)
 // });
 
 module.exports = T;
