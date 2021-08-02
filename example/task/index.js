@@ -1,8 +1,8 @@
-const Task = require('../../lib/task');
+const { Task } = require('../../lib');
 
 const T = new Task();
 
-T.addTask("A", function({request, cheerio }, next){
+T.addTask("A", function({ request, cheerio }, next){
     request.get('http://www.baidu.com').end((err, res)=>{
         if (res.ok) {
             let $ = cheerio.load(res.text)

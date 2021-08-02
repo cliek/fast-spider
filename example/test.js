@@ -1,6 +1,6 @@
-import Comsumer from '../lib/core'
+import { Spider } from '../lib'
 
-const C = new Comsumer({
+const spider = new Spider({
     ThreadsNum: 1,
     interval: 100,
     taskPath: 'example/task/index',
@@ -11,7 +11,7 @@ const C = new Comsumer({
     }
 });
 
-C.start({
+spider.start({
     taskName: "A",
     num: 10
 });
