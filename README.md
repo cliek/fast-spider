@@ -124,10 +124,10 @@ spider.start({
 });
 // result --> 百度一下，你就知道！
 ```
-
+## 模块说明
 ### Task模块-新建任务  
-#### addTaks(_taskName, callback)
-_taskName: String
+#### addTaks(taskName, callback)
+``` taskName: String ```
 
 任务名称,用于命名每个任务名称（如示例中用"A","B","C"）
 
@@ -136,44 +136,33 @@ callback: Function
 
 callback(modules, next) 回调方法可用参数（这里是重点）
 
-modules: Function || Object
++ modules: Function || Object
 
-参数 `params`: 用于任务之间传递参数 
+  + `params`: 用于任务之间传递参数 
+  + `modules`: 第三方模块
+    + （内置）`superagent`: 一个轻量的Ajax API，服务器端（Node.js）客户端（浏览器端）均可使用,SuperAgent具有学习曲线低、使用简单、可读性好的特点。
+     
+        >重要说明：内置集成时仅仅名称修改为 `request` 便于使用者的可读性，并不是使用的node自带模块`request`模块，使用方法与`superagent`API一致。
 
-内置模块 `modules`
+    + （内置）`cheerio`： 为服务器特别定制的，快速、灵活、实施的jQuery核心实现获取html节点工具
 
-`superagent`: 一个轻量的Ajax API，服务器端（Node.js）客户端（浏览器端）均可使用,SuperAgent具有学习曲线低、使用简单、可读性好的特点。
++ next(taskName: String, params?: Object, isWrite?: Boolean)
+  + `taskName` ：需要执行的下一个任务名
+  + `params` ：传递给下一个任务是携带的参数
+  + `isWrite` ：当前数据是否需要写入到文件，如果为 `true`, 则需要保证params值有效，传递给下一个任务作为参数的同时，并写入到文件中。
 
->重要说明：内置集成时仅仅名称修改为 `request` 便于使用者的可读性，并不是使用的node自带模块`requuse`模块，使用方法与`superagent`API一致。
-
-`cheerio`： 为服务器特别定制的，快速、灵活、实施的jQuery核心实现获取html节点工具
++ next(params: Object)
+> 如果只传递一个Object类型时，默认将当前数据是写入到文件。一般来说，使用这种传参方式都是最后一个任务需要将结果写入到文件时才执行的方法，这个方法是内置的，你也可不写入到文件，直接写入到数据库也是可以的，只需要参照[点击这里](#自定义module模块)查看示例，便可以在modules中注入方法，存储到指定位置。
 
 #### 关于modules
->当前可通过config导入自定义模块，比如用户需要使用到readis、mysql、MongoDB等工具均可扩展，且极其简单，具体自定义模块可[点击这里](#自定义module模块)查看示例
-
-
-next: IArguments
-
-next(taskName: String, params?: Object, isWrite?: Boolean)
-
-`taskName` 需要执行的下一个任务名
-
-`params` 传递给下一个任务是携带的参数
-
-`isWrite` 当前数据是否需要写入到文件，如果为 `true`, 则需要保证params值有效，传递给下一个任务作为参数的同时，并写入到文件中。
-
-next(params: Object)
-
-如果只传递一个Object类型时，默认将当前数据是写入到文件。一般来说，使用这种传参方式都是最后一个任务需要将结果写入到文件时才执行的方法，这个方法是内置的，你也可不写入到文件，直接写入到数据库也是可以的，只需要参照[点击这里](#自定义module模块)查看示例，便可以在modules中注入方法，存储到指定位置。
+当前可通过config导入自定义模块，比如用户需要使用到readis、mysql、MongoDB等工具均可扩展，且极其简单，具体自定义模块可[点击这里](#自定义module模块)查看示例
 
 ### Spider
-
 #### new Spider(cfg)
 
-cfg: Object
+`cfg`: Object
 
 config 配置文件，当前配置文件可分为两种，一种是在项目根目录新建一个`config.js`文件，而另一种就是使用传参的方式，从Spider函数中传递，请注意，当项目中有`cfg`传参,又有`config.js`文件时，将采用`cfg`传参，`config.js`文件配置将不会生效。例如：
-
 ```
 /* index.js */
 const { Spider } = require('fast-spider');
@@ -188,7 +177,6 @@ module.exports = {
 
 /* 这里的config.js文件配置将不会生效 */
 ```
-
 如果使其config文件生效，直接将函数传参删除即可。例如：
 
 ```
@@ -210,7 +198,7 @@ module.exports = {
 
 #### Spider.start(taskObject)
 
-taskObject: Object 
+`taskObject`: Object 
 
 ```
 {
@@ -307,13 +295,17 @@ task.addTask('index',function(modules, next){
     // 这样就可以使用md5的模块了
     const { md5 } = modules;
 });
+```
 
-/* task.js  以下是错误示范  以下是错误示范  以下是错误示范 */
+以下是错误示范  以下是错误示范  以下是错误示范
+
+```
+/* task.js */
 const { Task } = require('fast-spider');
 const md5 = require('md5-node');
 const task = new Task();
 task.addTask('index',function(modules, next){
-    // 这样在代码交给子线程时，无法获取到md5的方法，程序将会异常。
+    // 这样在代码交给子线程运行时，无法获取到md5的方法，程序将会异常。
     const _md5 = md5('ABCDE');
 });
 ```
