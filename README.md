@@ -4,13 +4,13 @@
 ### 一款基于node的多线程爬虫工具，只需要简单配置即可使用，内置集成了superagent，cheerio以及可自定义注入module模块，结果数据可生成csv、json等文件。
 -----------------
 
-+ 可配置的task任务，即使生产者也是消费者
-+ 基于node多线程实现异步处理task任务
-+ 内置superagent、cheerio，可自定义集成或替换内置工具
-+ 内置实现QueueList链表，可以自定义集成redis、mongodb等工具
++ 自定义任务模型，即使生产者(Producer)也是消费者(Comsumer)
++ 基于node多线程实现自动分配任务，防止轮询分配模式阻塞
++ 内置superagent、cheerio，抓取网页更快，还可自定义集成或替换内置工具
++ 内置实现QueueList链表，也可以自定义集成redis、mongodb等工具
 + 集成node-schedule定时执行
-+ 集成日志系统
-+ 可输出结果csv json文件
++ 集成Signale日志系统
++ 可输出csv、json文件
 + 子线程守护
 
 [![feS9tx.md.png](https://z3.ax1x.com/2021/08/05/feS9tx.md.png)](https://imgtu.com/i/feS9tx)
@@ -91,6 +91,7 @@ spider.start({
 });
 // 传参情况下，num默认是从10开始累加传递
 // result E --> 13
+
 ```
 #### 通过request获取网页示例
 ```
@@ -127,6 +128,7 @@ spider.start({
 ```
 ### 注意事项
 虽然示例很简单，但爬虫在实战中还是不免存在问题，比如第一个线程一直用于翻页获取地址，第二或第n个线程用于处理第一个线程所拿到的页码地址，就会造成第一个进程一直不断工作，在node多线程中，开始我采用的是轮询分配，很显然第一个线程在不停制造新数据的同时，仍旧会被分配新任务，后来我修改了分配方案。
+
 旧的方案：
 
 [![fZjL1e.png](https://z3.ax1x.com/2021/08/05/fZjL1e.png)](https://imgtu.com/i/fZjL1e)
@@ -135,10 +137,10 @@ spider.start({
 
 [![fZjO6H.png](https://z3.ax1x.com/2021/08/05/fZjO6H.png)](https://imgtu.com/i/fZjO6H)
 
-新的方案采用了一个数组存储当前可用的子进程ID，在`next`回调函数中，新增了一个参数`isDone`。默认情况下，执行了`next(...)`函数之后，该任务就结束了，子进程ID就自动进入可用状态，等待主线程再次送达任务。但是就如上实例中，因为需要翻页就会执行多次`next`函数，为了让当前进程不再接收数据，需要再第四个参数上设置为`false`,表示不释放当前子进程，因为还需要继续执行。
+新的方案采用了一个数组存储当前可用的子进程ID，在`next`回调函数中，新增了一个参数`isDone`。默认情况下，执行了`next(...)`函数之后，该任务就结束了，子进程ID就自动进入可用状态，等待主线程再次送达任务。但是就如上实例中，因为需要翻页就会执行多次`next`函数，为了让当前进程不再接收新任务，需要再第四个参数上设置为`false`，表示不释放当前子进程，因为还需要继续执行。
 
-#### 
-
+#### 获取豆瓣最热50条数据
+！！！next函数将参数传递到下个任务的同时，还保持着运行，直到最后一个数据发送给主线程后，执行关闭并释放该子线程。
 ```
 const { Task } = require('fast-spider');
 const task = new Task();
@@ -147,7 +149,8 @@ task.addTask("doubanTop50", function({ request }, next){
     request.get('https://movie.douban.com/j/search_subjects?type=movie&tag=%E7%83%AD%E9%97%A8&page_limit=50&page_start=0').end((err, res)=>{
         if (res.ok) {
             res.body.subjects.map((is, i, arr) => {
-                这里运用了三元取arr最后一条为 true，表示当前函数执行完毕，可以释放该子进程
+                // 这里运用了三元取arr最后一条为 true，表示当前函数执行完毕，可以释放该子进程
+                // 参数说明：next('下个任务名称', '传递的数据', '是否将数据写入到文件', '任务是否完成' )
                 next("doubanDesc",is, false, i === arr.length-1 ?true: false);
             })
         } else {
@@ -157,6 +160,7 @@ task.addTask("doubanTop50", function({ request }, next){
 });
 
 task.addTask("doubanDesc", function({params, request, cheerio }, next){
+    // 任务doubanTop50传递过来的数据存储在params中，在此任务中继续合成一个更详细的数据并导出成JSON文件
     request.get(`https://movie.douban.com/subject/${params.id}`).end((err, res) => {
         if(!err && res.ok){
             // 用cheerio解析html
@@ -169,6 +173,7 @@ task.addTask("doubanDesc", function({params, request, cheerio }, next){
                 type: $("span[property='v:genre']").text()
             }, params);
             // 导出成文件
+            // 参数说明：next('传递的数据') 如果只传递一个数据时，默认为保存数据，此项必须开启在config.js配置好pipe参数才会输出文件
             next(desc);
         }else{
             console.log('Oh no! error ' + err || res.text);
@@ -186,37 +191,40 @@ const spider = new Spider();
 spider.start({
     taskName: "doubanTop50"
 });
-// result --> 百度一下，你就知道！
+// result --> 文件默认将输出到项目根目录data文件夹下的json文件中
 ```
 
 ## 模块说明
 ### Task模块-新建任务  
-#### addTaks(taskName, callback)
-``` taskName: String ```
+#### addTasks(taskName, callBack)
+` taskName: String `
 
 任务名称,用于命名每个任务名称（如示例中用"A","B","C"）
 
-callback: Function
+`callBack: Function`
+
 回调函数，用于当前任务需要执行的逻辑块
 
-callback(modules, next) 回调方法可用参数（这里是重点）
+`callBack(modules, next) `
 
-+ modules: Function || Object
+回调方法可用参数（这里是重点!!!）
 
-  + `params`: 用于任务之间传递参数 
++ `modules: Function || Object`
+
+  + `params`: 上个任务传递过来的参数
   + `modules`: 第三方模块
-    + （内置）`superagent`: 一个轻量的Ajax API，服务器端（Node.js）客户端（浏览器端）均可使用,SuperAgent具有学习曲线低、使用简单、可读性好的特点。
+    + （内置）`superagent`: 一个轻量的Ajax API，服务器端（Node.js）客户端（浏览器端）均可使用，SuperAgent具有学习曲线低、使用简单、可读性好的特点。
      
         >重要说明：内置集成时仅仅名称修改为 `request` 便于使用者的可读性，并不是使用的node自带模块`request`模块，使用方法与`superagent`API一致。
 
     + （内置）`cheerio`： 为服务器特别定制的，快速、灵活、实施的jQuery核心实现获取html节点工具
-
-+ next(taskName: String, params?: Object, isWrite?: Boolean)
+> next的第一种参数模式
++ `next(taskName: String, params?: Object, isWrite?: Boolean, isDone?: Boolean)`
   + `taskName` ：需要执行的下一个任务名
-  + `params` ：传递给下一个任务是携带的参数
-  + `isWrite` ：当前数据是否需要写入到文件，如果为 `true`, 则需要保证params值有效，传递给下一个任务作为参数的同时，并写入到文件中。
-  + `isDone` ：表示当前子进程是否释放，默认当前执行了`next()`函数，就表示该任务已经完成，子进程将成为可用状态，默认为`undefined`,只有设置为`false`才不会释放。
-
+  + `params` ：传递给下一个任务时携带的参数
+  + `isWrite` ：当前数据是否需要写入到文件，默认是`false`。如果为 `true`, 则需要保证`params`值有效，传递给下一个任务作为参数的同时，并写入到文件中。
+  + `isDone` ：表示当前子进程是否完成，默认执行`next()`函数，程序就表示该任务已经完成，子进程将成为可用状态，默认为`undefined`,只有设置为`false`才不会释放详情见[注意事项](#注意事项)。
+> next的第二种参数模式
 + next(params: Object)
 > 如果只传递一个Object类型时，默认将当前数据是写入到文件。一般来说，使用这种传参方式都是最后一个任务需要将结果写入到文件时才执行的方法，这个方法是内置的，你也可不写入到文件，直接写入到数据库也是可以的，只需要参照[点击这里](#自定义module模块)查看示例，便可以在modules中注入方法，存储到指定位置。
 
@@ -289,7 +297,7 @@ module.exports = {
     // 自定义链表路径，如果需要自己实现链表，请指定该路径，否则请忽略
     // queuePath: '',
     // 使用子线程个数，不指定或者false默认1个线程，如果为true则根据当前计算机自动计算
-    ThreadsNum: 1,
+    ThreadsNum: 3,
     // 定时执行，如果为false或不指定将立即执行，如果需要定时执行请参考 https://github.com/node-schedule/node-schedule 中配置即可
     // schedule: false,
     // 公共函数注入，在回调函数中modules.plugins.XXX 使用
@@ -347,7 +355,7 @@ mudule.export = {
         */
         'md5-node',
         /*  
-            也可以直接传递一个字符串，但是变量会变成驼峰命名：
+            也可以直接传递一个字符串，但是变量中带有-的名称会变成驼峰命名：
             const md5Node = require('md5-node');
         */
     ]
@@ -363,7 +371,7 @@ task.addTask('index',function(modules, next){
 });
 ```
 
-以下是错误示范  以下是错误示范  以下是错误示范
+以下是错误示范！  以下是错误示范！  以下是错误示范！
 
 ```
 /* task.js */
@@ -377,17 +385,17 @@ task.addTask('index',function(modules, next){
 ```
 #### 如果不想使用内置`superagent`或者`cherrio`？
 可以通过相同的键值来覆盖内置的第三方包
-> 上述的模块配置通过`require`函数引入并统一注入到`task`回调函数`modules`中，切记不可以在`task`文件中引入文件使用，这样是错误的。
 
-> 同时可以通过这种方式将`redis`、`mysql`等数据库模块注入进来，在`task`运行的过程中，可以随时与外部存储交互。
+> 上述的模块配置通过`require`函数引入并统一注入到`task`回调函数`modules`中，切记不可以在`task`文件中引入第三方包使用，这样是错误的，如上面的错误示范。
 
-> 虽然子线程在运行过程中共享内存，但是`postMessage`并不能传递`function`,也无法共享数据实例（主线程引入了一个包，子线程并不能使用），但node的`require`默认是缓存在内存中的，因此第一次加载modules后，所有子线程均从缓存中读取自定义包或第三方包压力也不会大。具体我并没有测试过太多性能方面的问题，所以第三方包除非必要，尽量还是少引入，这样多线程的执行效率将会更高。
+> 同时可以通过自定义模块的方式将`redis`、`mysql`等数据库模块注入进来，在`task`运行的过程中，可以随时与外部存储交互。
 
+> 虽然子线程在运行过程中共享内存，但是`postMessage`并不能传递`function`,也无法共享数据实例（主线程引入了一个包，子线程并不能使用），但好在node的`require`默认是缓存在内存中的，因此第一次加载modules后，所有子线程均从缓存中读取自定义包或第三方包，这样执行的效率并不会太慢。具体我并没有测试过太多性能方面的问题，所以第三方包除非必要，尽量还是少引入，这样多线程的执行效率将会更高。
 
-以上将是fast-spider使用说明，如果你有更好的意见，或者文档中出现了错误，欢迎提到issue，我也会在后期逐渐更加细致的完善这个文档。
+以上将是fast-spider使用说明，个人编写，断断续续写了写么多，文档中出现了错误，欢迎提到issue，如果你有更好的意见，也可以在issue中询问，以便于我会在后期逐渐更加细致的完善它。
 
 ## 关于后期迭代计划
-- 关于文档中我大部分参数都标明了数据类型，所以我将会在下个版本全面替换成Ts （因为前期的实验型方案从多进程再到多线程上花了较多的时间尝试）
-- 其实此版本含有两个模式，即`flow`、`async`模式，其中`flow`为同步模式不与`linkQueue`发生通信，所以不支持多线程，并不适合现有的爬虫模式，不过仍然也有用得到它的地方，后期将会实现
-- 集成`redis`和`mongodb`、`mysql`等第三方数据库
+- Ts版本（因为前期的实验型方案从多进程再到多线程上花了较多的时间尝试）
+- 其实此版本含有两个模式，即`flow`、`async`模式，其中`flow`为同步模式不与`linkQueue`发生通信，所以不支持多线程，并不适合现有的爬虫模式，不过仍然也有用得到它的地方，后期将会实现。
+- 集成`redis`和`mongodb`、`mysql`等第三方数据库，当然前面也有示例如何集成`redis`案例，但是如果有必要，我还是会集成的吧！
 - 暂时只想到这么多，我会在使用过程中，逐渐优化并修复细节。
