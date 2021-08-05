@@ -1,10 +1,10 @@
 import { Spider } from '../lib'
 
 const spider = new Spider({
-    ThreadsNum: 1,
-    interval: 100,
+    ThreadsNum: 2,
+    interval: 500,
     taskPath: 'example/task/index',
-    schedule: '0 */1 * * * *',
+    // schedule: '*/15 * * * * *',
     pipe: {
         enabled: true,
         type: 'json',
@@ -13,6 +13,5 @@ const spider = new Spider({
 });
 
 spider.start({
-    taskName: "A",
-    num: 10
+    taskName: "doubanTop50"
 });

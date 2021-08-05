@@ -13,7 +13,7 @@
 + 可输出结果csv json文件
 + 子线程守护
 
-[![Wv1Buj.png](https://z3.ax1x.com/2021/07/31/Wv1Buj.png)](#)
+[![feS9tx.md.png](https://z3.ax1x.com/2021/08/05/feS9tx.md.png)](https://imgtu.com/i/feS9tx)
 
 ## 快速开始
 
@@ -29,6 +29,7 @@ yarn add XXX
 ```
 
 ### 目录结构
+
 请手动创建文件夹，如下：
 ```
 |-- task
@@ -124,6 +125,70 @@ spider.start({
 });
 // result --> 百度一下，你就知道！
 ```
+### 注意事项
+虽然示例很简单，但爬虫在实战中还是不免存在问题，比如第一个线程一直用于翻页获取地址，第二或第n个线程用于处理第一个线程所拿到的页码地址，就会造成第一个进程一直不断工作，在node多线程中，开始我采用的是轮询分配，很显然第一个线程在不停制造新数据的同时，仍旧会被分配新任务，后来我修改了分配方案。
+旧的方案：
+
+[![fZjL1e.png](https://z3.ax1x.com/2021/08/05/fZjL1e.png)](https://imgtu.com/i/fZjL1e)
+
+新的方案：
+
+[![fZjO6H.png](https://z3.ax1x.com/2021/08/05/fZjO6H.png)](https://imgtu.com/i/fZjO6H)
+
+新的方案采用了一个数组存储当前可用的子进程ID，在`next`回调函数中，新增了一个参数`isDone`。默认情况下，执行了`next(...)`函数之后，该任务就结束了，子进程ID就自动进入可用状态，等待主线程再次送达任务。但是就如上实例中，因为需要翻页就会执行多次`next`函数，为了让当前进程不再接收数据，需要再第四个参数上设置为`false`,表示不释放当前子进程，因为还需要继续执行。
+
+#### 
+
+```
+const { Task } = require('fast-spider');
+const task = new Task();
+/* task/index.js */
+task.addTask("doubanTop50", function({ request }, next){
+    request.get('https://movie.douban.com/j/search_subjects?type=movie&tag=%E7%83%AD%E9%97%A8&page_limit=50&page_start=0').end((err, res)=>{
+        if (res.ok) {
+            res.body.subjects.map((is, i, arr) => {
+                这里运用了三元取arr最后一条为 true，表示当前函数执行完毕，可以释放该子进程
+                next("doubanDesc",is, false, i === arr.length-1 ?true: false);
+            })
+        } else {
+            console.log('Oh no! error ' + err || res.text);
+        }
+    })
+});
+
+task.addTask("doubanDesc", function({params, request, cheerio }, next){
+    request.get(`https://movie.douban.com/subject/${params.id}`).end((err, res) => {
+        if(!err && res.ok){
+            // 用cheerio解析html
+            const $ = cheerio.load(res.text);
+            // 合并参数
+            const desc = Object.assign({
+                director: $(".attrs").eq(0).text(),
+                writer: $(".attrs").eq(1).text(),
+                actor: $(".attrs").eq(2).find('span').text().replace(/\//g,','),
+                type: $("span[property='v:genre']").text()
+            }, params);
+            // 导出成文件
+            next(desc);
+        }else{
+            console.log('Oh no! error ' + err || res.text);
+        }
+    })
+});
+
+// 导出task这步非常关键
+module.exports = task;
+
+/* index.js */
+const { Spider } = require('fast-spider');
+const spider = new Spider();
+/* 指定执行第一个任务 'doubanTop50' */
+spider.start({
+    taskName: "doubanTop50"
+});
+// result --> 百度一下，你就知道！
+```
+
 ## 模块说明
 ### Task模块-新建任务  
 #### addTaks(taskName, callback)
@@ -150,6 +215,7 @@ callback(modules, next) 回调方法可用参数（这里是重点）
   + `taskName` ：需要执行的下一个任务名
   + `params` ：传递给下一个任务是携带的参数
   + `isWrite` ：当前数据是否需要写入到文件，如果为 `true`, 则需要保证params值有效，传递给下一个任务作为参数的同时，并写入到文件中。
+  + `isDone` ：表示当前子进程是否释放，默认当前执行了`next()`函数，就表示该任务已经完成，子进程将成为可用状态，默认为`undefined`,只有设置为`false`才不会释放。
 
 + next(params: Object)
 > 如果只传递一个Object类型时，默认将当前数据是写入到文件。一般来说，使用这种传参方式都是最后一个任务需要将结果写入到文件时才执行的方法，这个方法是内置的，你也可不写入到文件，直接写入到数据库也是可以的，只需要参照[点击这里](#自定义module模块)查看示例，便可以在modules中注入方法，存储到指定位置。
