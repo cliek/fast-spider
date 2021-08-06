@@ -71,6 +71,8 @@ task.addTask("D", function({ params }, next){
 });
 task.addTask("E", function({ params }, next){
     console.log(params.num)
+    // 释放子进程
+    next(true)
 });
 // 一定要导出,这一步非常重要
 module.exports = task;
@@ -109,10 +111,12 @@ task.addTask("A", function({ request, cheerio }, next){
             console.log('Oh no! error ' + res.text);
         }
     })
-});·
+});
 
 task.addTask("B", function({ params }, next){
     console.log(params.title);
+    // 每个子进程执行完毕后必须调用next函数，该子进程才会被释放出来
+    next(true);
 });
 // 导出task这步非常关键
 module.exports = task;
@@ -219,14 +223,25 @@ spider.start({
 
     + （内置）`cheerio`： 为服务器特别定制的，快速、灵活、实施的jQuery核心实现获取html节点工具
 > next的第一种参数模式
+
 + `next(taskName: String, params?: Object, isWrite?: Boolean, isDone?: Boolean)`
   + `taskName` ：需要执行的下一个任务名
   + `params` ：传递给下一个任务时携带的参数
   + `isWrite` ：当前数据是否需要写入到文件，默认是`false`。如果为 `true`, 则需要保证`params`值有效，传递给下一个任务作为参数的同时，并写入到文件中。
   + `isDone` ：表示当前子进程是否完成，默认执行`next()`函数，程序就表示该任务已经完成，子进程将成为可用状态，默认为`undefined`,只有设置为`false`才不会释放详情见[注意事项](#注意事项)。
+
 > next的第二种参数模式
-+ next(params: Object)
-> 如果只传递一个Object类型时，默认将当前数据是写入到文件。一般来说，使用这种传参方式都是最后一个任务需要将结果写入到文件时才执行的方法，这个方法是内置的，你也可不写入到文件，直接写入到数据库也是可以的，只需要参照[点击这里](#自定义module模块)查看示例，便可以在modules中注入方法，存储到指定位置。
+
++ `next(params?: Object)`
+
+如果只传递一个Object类型时，默认将当前数据是写入到文件。一般来说，使用这种传参方式都是最后一个任务需要将结果写入到文件时才执行的方法，这个方法是内置的，你也可不写入到文件，直接写入到数据库也是可以的，只需要参照[点击这里](#自定义module模块)查看示例，便可以在modules中注入方法，存储到指定位置。
+
+> next的第三种参数模式
+
++ `next(params?: Boolean)`
+
+如果传递一个Boolean类型时，表示当前子线程是否运行完成，是否可以被释放，默认情况下可以不传参数，如：`next()`，等同于传递`next(true)`，如果为`false`，那么此子线程将不会被释放，同时不携带任何参数，一般将数据存储到外部模块中时，才会用到此参数。
+
 
 #### 关于modules
 当前可通过config导入自定义模块，比如用户需要使用到readis、mysql、MongoDB等工具均可扩展，且极其简单，具体自定义模块可[点击这里](#自定义module模块)查看示例
@@ -331,8 +346,11 @@ module.exports = {
 ```
 
 ### 自定义module模块
-> 当前内置`superagent`、`cheerio`，可以传递一个 `object`类型数据，也可以直接传递一个`string`类型的包名来引入`node_modules`中的第三方包。像这样：
+> 当前内置`superagent`、`cheerio`，可以传递一个 `object`类型数据，也可以直接传递一个`string`类型的包名来引入`node_modules`中的第三方包。
+
+像这样：
 比如我们需要使用一个第三方的`md5`模块
+
 ```
 /* config.js */
 mudule.export = {
@@ -392,10 +410,10 @@ task.addTask('index',function(modules, next){
 
 > 虽然子线程在运行过程中共享内存，但是`postMessage`并不能传递`function`,也无法共享数据实例（主线程引入了一个包，子线程并不能使用），但好在node的`require`默认是缓存在内存中的，因此第一次加载modules后，所有子线程均从缓存中读取自定义包或第三方包，这样执行的效率并不会太慢。具体我并没有测试过太多性能方面的问题，所以第三方包除非必要，尽量还是少引入，这样多线程的执行效率将会更高。
 
-以上将是fast-spider使用说明，个人编写，断断续续写了写么多，文档中出现了错误，欢迎提到issue，如果你有更好的意见，也可以在issue中询问，以便于我会在后期逐渐更加细致的完善它。
+以上将是fast-spider使用说明，个人编写断断续续写了写么多可能会有疏忽，文档中如果出现了错误，欢迎提到issue，如果你有更好的意见，也可以在issue中表明，以便于我会在后期逐渐更加细致的完善它。
 
 ## 关于后期迭代计划
-- Ts版本（因为前期的实验型方案从多进程再到多线程上花了较多的时间尝试）
+- Ts版本（因为前期的实验型方案从多进程再到多线程上花了较多的时间）
 - 其实此版本含有两个模式，即`flow`、`async`模式，其中`flow`为同步模式不与`linkQueue`发生通信，所以不支持多线程，并不适合现有的爬虫模式，不过仍然也有用得到它的地方，后期将会实现。
 - 集成`redis`和`mongodb`、`mysql`等第三方数据库，当然前面也有示例如何集成`redis`案例，但是如果有必要，我还是会集成的吧！
 - 暂时只想到这么多，我会在使用过程中，逐渐优化并修复细节。
