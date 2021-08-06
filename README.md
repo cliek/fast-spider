@@ -21,11 +21,11 @@
 
 使用npm进行安装
 ```
-npm install XXX --save
+npm install fast-spider --save
 ```
 使用yarn进行安装
 ```
-yarn add XXX
+yarn add fast-spider
 ```
 
 ### 目录结构
