@@ -1,10 +1,13 @@
 {
   "name": "fast-spider",
   "version": "1.0.0",
+  "author": "cliek",
+  "description": "A simple and fast crawler tool based on node",
   "keywords": [
+    "fast-spider",
     "spider",
     "clawer",
-    "spider-node"
+    "node-spider"
   ],
   "main": "lib/index.js",
   "license": "MIT",
@@ -16,15 +19,14 @@
     "superagent": "^6.1.0",
     "uuid": "^8.3.2"
   },
-  "scripts": {
-    "start": "./node_modules/.bin/babel-node --presets @babel/env ./index.js",
-    "debug": "./node_modules/.bin/babel-node --presets @babel/env ./lib/consumer/cluster.js",
-    "test": "./node_modules/.bin/babel-node --presets @babel/env ./example/test.js"
-  },
   "devDependencies": {
     "@babel/cli": "^7.14.5",
     "@babel/core": "^7.14.6",
     "@babel/node": "^7.14.7",
     "@babel/preset-env": "^7.14.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cliek/fast-spider"
   }
 }
