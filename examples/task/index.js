@@ -1,4 +1,4 @@
-const { Task } = require('../../lib');
+const { Task } = require('../../lib/index');
 const task = new Task();
 task.addTask("A", function({ request, cheerio }, next){
     request.get('http://www.baidu.com').end((err, res)=>{

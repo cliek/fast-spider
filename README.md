@@ -342,8 +342,52 @@ module.exports = {
 例如使用`node-redis`作为`LinkQueue`的示例：
 
 ```
+/* modules/redisQueue.js */
+const redis = require("redis");
+const client = redis.createClient({
+    host: "127.0.0.1",
+    port: 6379,
+    prefix: "fast-"
+});
+
+client.on("error", function(error) {
+    console.error(error);
+});
+
+exports.add = function(key, val){
+    if(val instanceof Object) val = JSON.stringify({
+        data: val
+    });
+    return new Promise(function(resolve, reject){
+        client.lpush('spider', val, function(err, reply) {
+            if(err) reject(err)
+            resolve(reply);
+        })
+    });
+}
+
+exports.pop = function(){
+    return new Promise(function(resolve, reject){
+        client.rpop('spider', function(err, reply) {
+            if(err) reject(err)
+            resolve(JSON.parse(reply));
+        })
+    });
+}
+
+exports.size = function(){
+    return new Promise(function(resolve, reject){
+        client.llen('spider', function(err, reply) {
+            if(err) reject(err)
+            resolve(reply);
+        })
+    });
+}
 
 ```
+> 如果使用`redis`作为`LinkQueue`，需要安装以下两点：
+> + 需要安装`redis`工具，请自行根据自己的系统安装（windows / Mac）`redis`工具
+> + 需要安装`redis node库`，本示例使用的是[`node-redis`]('https://github.com/noderedis/node-redis/')，但安装的方式是`npm install redis --save` or `yarn add redis`
 
 ### 自定义module模块
 > 当前内置`superagent`、`cheerio`，可以传递一个 `object`类型数据，也可以直接传递一个`string`类型的包名来引入`node_modules`中的第三方包。
@@ -412,8 +456,12 @@ task.addTask('index',function(modules, next){
 
 以上将是fast-spider使用说明，个人编写断断续续写了写么多可能会有疏忽，文档中如果出现了错误，欢迎提到issue，如果你有更好的意见，也可以在issue中表明，以便于我会在后期逐渐更加细致的完善它。
 
+## 所有示例
+如上所有示例均已经放在`examples`文件夹中，其中有上面的所演示提到的示例，也有部分测试片段代码，其中包括如果使用外部`queuePath`，指定执行某个任务的`taskPath`等可执行代码片。
+
 ## 关于后期迭代计划
 - Ts版本（因为前期的实验型方案从多进程再到多线程上花了较多的时间）
 - 其实此版本含有两个模式，即`flow`、`async`模式，其中`flow`为同步模式不与`linkQueue`发生通信，所以不支持多线程，并不适合现有的爬虫模式，不过仍然也有用得到它的地方，后期将会实现。
-- 集成`redis`和`mongodb`、`mysql`等第三方数据库，当然前面也有示例如何集成`redis`案例，但是如果有必要，我还是会集成的吧！
+- 集成`redis`和`mongodb`、`mysql`等第三方数据库，当然前面也有示例如何集成`redis`案例，但是如果有必要，我还是会写一套集成示例的！
+- 日志系统目前是一个失败的，仅可展示的工具，我会在下个版本中重构`logs`部分。
 - 暂时只想到这么多，我会在使用过程中，逐渐优化并修复细节。
