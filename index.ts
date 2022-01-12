@@ -1,10 +1,13 @@
-import { DynamicThreadPool, ThreadWorker } from 'poolifier';
+import { DynamicPool } from 'node-worker-threads-pool';
+const Pool = new DynamicPool(4);
 
-function myFunction (data: any) {
-    // console.log(t);
-    return { ok: 1, data: {data} }
+export {
+    Pool
 }
 
-const Thread = new ThreadWorker(myFunction, { maxInactiveTime: 30000, async: true });
 
-export default Thread
+// 动态线程上限事件
+// Pool.emitter.on('FullPool', ()=>{
+//     console.log('Pool is To achieve the maximum!')
+// })
+

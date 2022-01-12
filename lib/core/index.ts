@@ -1,19 +1,11 @@
-import { DynamicThreadPool } from 'poolifier';
-import { join } from 'path';
-
-const Pool = new DynamicThreadPool(1, 10, join(__dirname, './worker.js'), {
-    errorHandler: (e) => {
-        debugger
-        console.error(e);
-    },
-    onlineHandler: () => {
-        console.log('worker is online');
-    }
-});
-
+import { DynamicPool } from 'node-worker-threads-pool';
+// import { join } from 'path';
+// const workksPath = join(__dirname, './worker.js');
+const Pool = new DynamicPool(4);
+Pool.exec({
+    task: (n)=>(n+2),
+    param: 2
+}).then(res => {
+    console.log(res)
+})
 export default Pool;
-
-// 动态线程上限事件
-// Pool.emitter.on('FullPool', ()=>{
-//     console.log('Pool is To achieve the maximum!')
-// })

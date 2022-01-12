@@ -5,18 +5,18 @@ module.exports = {
     entry: './index.ts', // 入口文件
     resolve: {
         extensions: ['.ts'],
-        alias: {
-            crypto: false
+        fallback: {
+            path: false
         }
     },    
     output: {
         filename: '[name].js',// 生成的fiename需要与package.json中的main一致
-        path: path.resolve(__dirname, './dist'),
+        path: path.resolve(__dirname, 'dist'),
         libraryTarget: 'commonjs',
     },
     plugins: [
         new CleanWebpackPlugin({
-            cleanOnceBeforeBuildPatterns: path.resolve(__dirname, './dist')
+            cleanOnceBeforeBuildPatterns: path.resolve(__dirname, 'dist')
         }), // 清除上一次打包内容
     ],
     module: {

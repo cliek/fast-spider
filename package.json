@@ -13,7 +13,7 @@
   "module": "index.ts",
   "scripts": {
     "test": "jest",
-    "build": "webpack",
+    "build": "tsc",
     "dev": "node --loader ts-node/esm ./index.ts",
     "deve": "cd examples && node --loader ts-node/esm ./index.ts"
   },
@@ -29,6 +29,8 @@
     "eslint": "^8.6.0",
     "jest": "^27.4.7",
     "node-schedule": "^2.0.0",
+    "node-worker-threads-pool": "^1.5.1",
+    "nodejs-threadpool": "^1.0.1",
     "superagent": "^6.1.0",
     "ts-loader": "^9.2.6",
     "ts-node": "^10.4.0",

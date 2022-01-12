@@ -1,5 +1,8 @@
-import Pool from "../lib/core";
+import { Pool } from "../index";
 
-Pool.execute({a:'test'}).then(res => {
-    console.log(res);
+Pool.exec({
+    task: (n)=>(n+2),
+    param: 2
+}).then((res: number) => {
+    console.log(res)
 })
