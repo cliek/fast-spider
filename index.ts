@@ -1,13 +1,3 @@
-import { DynamicPool } from 'node-worker-threads-pool';
-const Pool = new DynamicPool(4);
-
-export {
-    Pool
-}
-
-
-// 动态线程上限事件
-// Pool.emitter.on('FullPool', ()=>{
-//     console.log('Pool is To achieve the maximum!')
-// })
-
+import { Spider } from "./lib";
+import Task from './task';
+const S = new Spider(3).runTask('aa');

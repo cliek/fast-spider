@@ -1,10 +1,13 @@
-
 declare type ItemType = {
-    data: object,
+    data: DataType,
     prev: string,
     next: string
 }
 
+declare type DataType = { 
+    taskName: string,
+    params: object
+}
 class LinkQueueMap {
     public _front: ItemType | null;
     public _rear: ItemType | null;
@@ -16,7 +19,7 @@ class LinkQueueMap {
         this._mq = new Map();
     }
     
-    _item(data: object, prev: string, next: string | null): ItemType{
+    _item(data: DataType, prev: string, next: string | null): ItemType{
         return {
             data,
             prev,
@@ -24,7 +27,7 @@ class LinkQueueMap {
         };
     }
     
-    addQueue(key: string, val: object):void{
+    addQueue(key: string, val: DataType):void{
         if(this.size() === 0){
             // 存入第一个对象在游标项中
             this._front = this._item(val, key, null);
@@ -36,11 +39,11 @@ class LinkQueueMap {
         this._mq.set(this._rear.prev, this._rear);
     }
 
-    popQueue(): object{
+    popQueue(): ItemType{
         if(this._mq.size){
-            const current = this._mq.get(this._front.prev);
+            const current: ItemType = this._mq.get(this._front.prev);
             this._mq.delete(this._front.prev);
-            this._front = this._mq.get(current.next || '');
+            this._front = this._mq.get(current.next || null);
             return current;
         }else{
             const current = this._front || this._rear;
@@ -66,6 +69,6 @@ const Q = new LinkQueueMap();
 
 export default Q;
 
-export const addQueue = Q.addQueue.bind(Q);
-export const popQueue = Q.popQueue.bind(Q);
-export const getQueue = Q.getQueue.bind(Q);
+// export const addQueue = Q.addQueue.bind(Q);
+// export const popQueue = Q.popQueue.bind(Q);
+// export const getQueue = Q.getQueue.bind(Q);

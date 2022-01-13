@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Pool = void 0;
-var node_worker_threads_pool_1 = require("node-worker-threads-pool");
-var Pool = new node_worker_threads_pool_1.DynamicPool(4);
-exports.Pool = Pool;
+exports.Spider = exports.Queue = void 0;
+var queue_1 = require("./queue");
+exports.Queue = queue_1.default;
+var core_1 = require("./core");
+exports.Spider = core_1.default;
 //# sourceMappingURL=index.js.map

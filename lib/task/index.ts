@@ -1,4 +1,4 @@
-type TaskType = {
+export type TaskType = {
     [key:string]: Function
 }
 
@@ -10,17 +10,21 @@ class Tasks {
         this.task = {}
     }
 
-    addTask(taskName: string, fn: Function): boolean | Function{
+    addTask(taskName: string, fn: Function): boolean | TaskType {
         if(this.task.hasOwnProperty(taskName)) {
             console.error(taskName + " is already exists");
             return false;
         }
         this.task[taskName] = fn
-        return true;
+        return this.task;
     }
 
     removeTask(taskName: string){
         return delete this.task[taskName]
+    }
+
+    getTask(tn: string): Function{
+        return this.task[tn];
     }
 
     getTasks(): object{
@@ -28,4 +32,4 @@ class Tasks {
     }
 }
 
-export default new Tasks();
+export default Tasks;

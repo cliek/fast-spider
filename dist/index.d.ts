@@ -1,4 +1,4 @@
-import { DynamicPool } from 'node-worker-threads-pool';
-declare const Pool: DynamicPool;
-export { Pool };
+import Queue from './queue';
+import Spider from './core';
+export { Queue, Spider };
 //# sourceMappingURL=index.d.ts.map

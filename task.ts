@@ -1,31 +1,32 @@
-import { Task } from '../../dist/index'
+import Task from './lib/task';
 
-Task.addTask('aa', function(params){
+const task = new Task();
+task.addTask('aa', function(params: any){
     console.log('哈哈')
     return {
         taskName: 'bb',
-        params: "哈哈哈"
+        params: "哈哈哈" + params
     }
 })
 
-Task.addTask('bb', function(params){
+task.addTask('bb', function(params: any){
     return {
         taskName: 'cc',
         params: "bb" + params
     }
 })
 
-Task.addTask('cc', function(params){
+task.addTask('cc', function(params: any){
     return {
         taskName: 'dd',
         params: "cc" + params
     }
 })
 
-Task.addTask('dd', function(){
+task.addTask('dd', function(params: any){
     return {
         params: "dd" + params
     }
 })
 
-export default Task;
+export default task;
