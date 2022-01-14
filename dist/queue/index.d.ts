@@ -3,8 +3,8 @@ declare type ItemType = {
     prev: string;
     next: string;
 };
-declare type DataType = {
-    taskName: string;
+export declare type DataType = {
+    nextName: string;
     params: object;
 };
 declare class LinkQueueMap {
@@ -13,11 +13,10 @@ declare class LinkQueueMap {
     _mq: Map<string, ItemType>;
     constructor();
     _item(data: DataType, prev: string, next: string | null): ItemType;
-    addQueue(key: string, val: DataType): void;
+    addQueue(val: DataType, key?: string): void;
     popQueue(): ItemType;
     size(): number;
     getQueue(): Map<string, ItemType>;
 }
-declare const Q: LinkQueueMap;
-export default Q;
+export default LinkQueueMap;
 //# sourceMappingURL=index.d.ts.map

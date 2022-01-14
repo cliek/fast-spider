@@ -3,44 +3,54 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var node_worker_threads_pool_1 = require("node-worker-threads-pool");
 var queue_1 = require("../queue");
 var path_1 = require("path");
+var EventEmitter = require("events");
 var Spider = (function () {
-    function Spider(size) {
+    function Spider(size, taskPath) {
+        this._mq = new queue_1.default();
         this._pool = new node_worker_threads_pool_1.StaticPool({
             size: size,
-            task: (0, path_1.resolve)(__dirname, 'worker.js')
+            task: (0, path_1.resolve)(__dirname, 'worker.js'),
+            workerData: {
+                taskPath: taskPath
+            }
         });
-        this._pool.on('next', this.nextTask);
+        this._events = new EventEmitter();
     }
-    Spider.prototype.addTask = function (tasks) {
-        debugger;
-        this._task = tasks.task;
-        return this;
-    };
-    Spider.prototype.runTask = function (taskName, params) {
+    Spider.prototype.runTask = function (taskName, data) {
         var _this = this;
         this._pool.exec({
-            param: params,
-            timeout: 60000,
-        }).then(function (res) {
-            if (res) {
-                debugger;
-                _this._pool.emit('data', res);
-            }
-            else {
-                debugger;
-                _this._pool.emit('next', res);
+            taskName: taskName,
+            data: data
+        }, 60000).then(function (res) {
+            var type = res.type, result = res.result;
+            switch (type) {
+                case 'queue':
+                    _this._mq.addQueue({
+                        nextName: result.nextName,
+                        params: result.data
+                    });
+                    _this._events.emit('next', result);
+                    break;
+                case 'done':
+                    _this.nextTask();
+                    _this._events.emit('data', res);
+                    break;
+                case 'error':
+                    _this._events.emit('error', res);
+                    break;
             }
         }).catch(function (err) {
             if ((0, node_worker_threads_pool_1.isTimeoutError)(err))
-                return _this._pool.emit('TimeoutError', err);
-            _this._pool.emit('error', err);
+                return _this._events.emit('TimeoutError', err);
+            _this._events.emit('error', err);
         });
+        return this;
     };
     Spider.prototype.nextTask = function () {
-        var _params = queue_1.default.popQueue();
+        var _params = this._mq.popQueue();
         if (_params) {
-            var _a = _params.data, taskName = _a.taskName, params = _a.params;
-            this.runTask(taskName, params);
+            var _a = _params.data, nextName = _a.nextName, params = _a.params;
+            this.runTask(nextName, params);
         }
         else {
             this.exit();

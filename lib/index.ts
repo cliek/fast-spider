@@ -1,7 +1,7 @@
-import Queue from './queue';
 import Spider from './core';
+import task from './task';
 
-export {
-    Queue,
-    Spider
-};
+
+export const Task = task;
+export default Spider;
+

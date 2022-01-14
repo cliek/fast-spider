@@ -2,7 +2,7 @@ export declare type TaskType = {
     [key: string]: Function;
 };
 declare class Tasks {
-    task: TaskType;
+    _task: TaskType;
     constructor();
     addTask(taskName: string, fn: Function): boolean | TaskType;
     removeTask(taskName: string): boolean;

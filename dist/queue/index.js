@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var uuid_1 = require("uuid");
 var LinkQueueMap = (function () {
     function LinkQueueMap() {
         this._front = null;
@@ -13,7 +14,8 @@ var LinkQueueMap = (function () {
             next: next
         };
     };
-    LinkQueueMap.prototype.addQueue = function (key, val) {
+    LinkQueueMap.prototype.addQueue = function (val, key) {
+        key = key || (0, uuid_1.v4)();
         if (this.size() === 0) {
             this._front = this._item(val, key, null);
             this._rear = this._item(val, key, null);
@@ -50,6 +52,5 @@ var LinkQueueMap = (function () {
     };
     return LinkQueueMap;
 }());
-var Q = new LinkQueueMap();
-exports.default = Q;
+exports.default = LinkQueueMap;
 //# sourceMappingURL=index.js.map

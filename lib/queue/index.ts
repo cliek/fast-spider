@@ -1,11 +1,13 @@
+import { v4 as uuidv4 } from 'uuid';
+
 declare type ItemType = {
     data: DataType,
     prev: string,
     next: string
 }
 
-declare type DataType = { 
-    taskName: string,
+export declare type DataType = { 
+    nextName: string,
     params: object
 }
 class LinkQueueMap {
@@ -27,7 +29,8 @@ class LinkQueueMap {
         };
     }
     
-    addQueue(key: string, val: DataType):void{
+    addQueue(val: DataType, key?: string):void{
+        key = key || uuidv4();
         if(this.size() === 0){
             // 存入第一个对象在游标项中
             this._front = this._item(val, key, null);
@@ -65,10 +68,4 @@ class LinkQueueMap {
     }
 }
 
-const Q = new LinkQueueMap();
-
-export default Q;
-
-// export const addQueue = Q.addQueue.bind(Q);
-// export const popQueue = Q.popQueue.bind(Q);
-// export const getQueue = Q.getQueue.bind(Q);
+export default LinkQueueMap;

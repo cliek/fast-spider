@@ -1,54 +1,76 @@
 import { StaticPool, isTimeoutError } from 'node-worker-threads-pool';
-import Queue from '../queue';
-import Tasks, { TaskType } from '../task';
+import LinkQueueMap, { DataType } from '../queue';
 import { resolve } from 'path';
+import * as EventEmitter from 'events';
+
+declare type resultType = {
+    nextName: string,
+    data: DataType
+}
+
+declare type ReturnResType = {
+    type: string,
+    result: resultType
+}
+
 class Spider {
 
     public _pool: any;
-    public _task: TaskType;
+    protected _mq: LinkQueueMap;
+    readonly _events: EventEmitter;
 
-    constructor(size: number) {
+    constructor(size: number, taskPath: string) {
+        this._mq = new LinkQueueMap();
         this._pool = new StaticPool({
             size: size,
-            task: resolve(__dirname, 'worker.js')
+            task: resolve(__dirname, 'worker.js'),
+            workerData: {
+                taskPath
+            }
         });
-        this._pool.on('next', this.nextTask);
+        this._events = new EventEmitter();
     }
 
-    addTask(tasks: Tasks) {
-        this._task = tasks.task;
+    runTask(taskName: string, data?: object):this {
+        this._pool.exec({
+            taskName,
+            data
+        }, 60000).then((res: ReturnResType) => {
+            const { type, result } = res;
+            switch(type){
+                case 'queue':
+                    this._mq.addQueue({
+                        nextName: result.nextName,
+                        params: result.data
+                    });
+                    this._events.emit('next', result);
+                    break;
+                case 'done':
+                    this._events.emit('data', res);
+                    break;
+                case 'error':
+                    this._events.emit('error', res);
+                    break;
+            }
+        }).catch((err: Error) => {
+            if(isTimeoutError(err)) return this._events.emit('TimeoutError', err);
+            this._events.emit('error', err);
+        })
         return this;
     }
 
-    runTask(taskName: string, params?: object):void {
-        this._pool.exec({
-            param: params,
-            timeout: 60000,
-        }).then((res: any) => {
-            if(res){
-                // done
-                debugger
-                this._pool.emit('data', res);
-            }else{
-                // next
-                debugger
-                // addQueue
-                this._pool.emit('next', res);
-            }
-        }).catch((err: Error) => {
-            if(isTimeoutError(err)) return this._pool.emit('TimeoutError', err);
-            this._pool.emit('error', err);
-        })
-    }
-
     nextTask() {
-        const _params = Queue.popQueue();
+        const _params = this._mq.popQueue();
         if(_params){
-            const { taskName, params } = _params.data;
-            this.runTask(taskName, params);
+            const { nextName, params } = _params.data;
+            this.runTask(nextName, params);
         }else{
             this.exit();
         }
+    }
+
+    rollTask() {
+        
     }
 
     exit():void {

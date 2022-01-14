@@ -1,10 +1,12 @@
-import Tasks, { TaskType } from '../task';
+/// <reference types="node" />
+import LinkQueueMap from '../queue';
+import * as EventEmitter from 'events';
 declare class Spider {
     _pool: any;
-    _task: TaskType;
-    constructor(size: number);
-    addTask(tasks: Tasks): this;
-    runTask(taskName: string, params?: object): void;
+    protected _mq: LinkQueueMap;
+    readonly _events: EventEmitter;
+    constructor(size: number, taskPath: string);
+    runTask(taskName: string, data?: object): this;
     nextTask(): void;
     exit(): void;
 }

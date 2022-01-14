@@ -4,31 +4,31 @@ export type TaskType = {
 
 class Tasks {
     
-    public task: TaskType;
+    public _task: TaskType;
 
     constructor(){
-        this.task = {}
+        this._task = {}
     }
 
     addTask(taskName: string, fn: Function): boolean | TaskType {
-        if(this.task.hasOwnProperty(taskName)) {
+        if(this._task.hasOwnProperty(taskName)) {
             console.error(taskName + " is already exists");
             return false;
         }
-        this.task[taskName] = fn
-        return this.task;
+        this._task[taskName] = fn
+        return this._task;
     }
 
     removeTask(taskName: string){
-        return delete this.task[taskName]
+        return delete this._task[taskName]
     }
 
     getTask(tn: string): Function{
-        return this.task[tn];
+        return this._task[tn];
     }
 
     getTasks(): object{
-        return this.task;
+        return this._task;
     }
 }
 

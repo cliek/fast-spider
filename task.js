@@ -1,7 +1,5 @@
 const Task = require('./lib/task');
-debugger
 const task = new Task.default();
-debugger
 task.addTask('aa', function(params){
     console.log('哈哈')
     return {
