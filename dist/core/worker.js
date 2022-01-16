@@ -1,10 +1,12 @@
 const { parentPort, workerData } = require('worker_threads');
 const { join } = require('path');
 const { taskPath } = workerData;
-const tasks = require(join(process.cwd(), taskPath));
+const Tasks = require(join(process.cwd(), taskPath));
 
 parentPort.on('message', async(data) => {
-    const { taskName, data:params } = data;
+    const { taskName, data:params, type } = data;
+    if(type === 'exit') return process.exit();
+    const tasks = Tasks.getTasks();
     if(tasks.hasOwnProperty(taskName)){
         try {
             const result = await tasks[taskName](params, (data)=>{
@@ -16,6 +18,7 @@ parentPort.on('message', async(data) => {
             // return the result to main thread.
             if(result){
                 parentPort.postMessage({
+                    taskName: taskName,
                     type: 'done',
                     result
                 });

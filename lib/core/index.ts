@@ -1,41 +1,24 @@
-import { StaticPool, isTimeoutError } from 'node-worker-threads-pool';
-import LinkQueueMap, { DataType } from '../queue';
+import Pool from "./pool";
+import LinkQueueMap from '../queue';
 import { resolve } from 'path';
 import * as EventEmitter from 'events';
 
-declare type resultType = {
-    nextName: string,
-    data: DataType
-}
-
-declare type ReturnResType = {
-    type: string,
-    result: resultType
-}
-
 class Spider {
 
-    public _pool: any;
-    protected _mq: LinkQueueMap;
-    readonly _events: EventEmitter;
+    public _pool: Pool;
+    protected _fristTask: boolean;
+    public _roll: NodeJS.Timer | null = null;
+    public _mq: LinkQueueMap;
+    readonly events: EventEmitter;
 
     constructor(size: number, taskPath: string) {
         this._mq = new LinkQueueMap();
-        this._pool = new StaticPool({
-            size: size,
-            task: resolve(__dirname, 'worker.js'),
-            workerData: {
-                taskPath
-            }
+        this.events = new EventEmitter();
+        this._fristTask = true;
+        this._pool = new Pool(size, resolve(__dirname, 'worker.js'),{
+            taskPath
         });
-        this._events = new EventEmitter();
-    }
-
-    runTask(taskName: string, data?: object):this {
-        this._pool.exec({
-            taskName,
-            data
-        }, 60000).then((res: ReturnResType) => {
+        this._pool.events.on('message', (res: any) => {
             const { type, result } = res;
             switch(type){
                 case 'queue':
@@ -43,34 +26,48 @@ class Spider {
                         nextName: result.nextName,
                         params: result.data
                     });
-                    this._events.emit('next', result);
+                    this.events.emit('next', result);
+                    if(this._fristTask){ 
+                        this.rollTask();
+                        this._fristTask = false;
+                    }
                     break;
                 case 'done':
-                    this._events.emit('data', res);
+                    this.events.emit('data', res);
                     break;
                 case 'error':
-                    this._events.emit('error', res);
+                    this.events.emit('error', res);
                     break;
             }
-        }).catch((err: Error) => {
-            if(isTimeoutError(err)) return this._events.emit('TimeoutError', err);
-            this._events.emit('error', err);
+        });
+    }
+
+    runTask(taskName: string, data?: object): this{
+        this._pool.exec("1",{
+            taskName,
+            data
         })
         return this;
     }
 
     nextTask() {
-        const _params = this._mq.popQueue();
-        if(_params){
-            const { nextName, params } = _params.data;
-            this.runTask(nextName, params);
-        }else{
-            this.exit();
+        const tid = this._pool.findAvailableThread();
+        if(typeof tid === 'string'){
+            const _params = this._mq.popQueue();
+            if(_params){
+                const { nextName, params } = _params.data;
+                this._pool.exec(tid, {taskName: nextName, data: params });
+            }else{
+                clearInterval(this._roll);
+                this.exit();
+                console.log('queueList is empty！');
+            }
         }
+        
     }
 
     rollTask() {
-        
+        this._roll = setInterval(this.nextTask.bind(this), 300);
     }
 
     exit():void {

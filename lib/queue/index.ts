@@ -48,19 +48,12 @@ class LinkQueueMap {
             this._mq.delete(this._front.prev);
             this._front = this._mq.get(current.next || null);
             return current;
-        }else{
-            const current = this._front || this._rear;
-            this._front = this._rear = null;
-            return current;
         }
+        return null;
     }
 
     size(): number{
-        if(this._front){
-            return this._mq.size + 1;
-        }else{
-            return this._mq.size;
-        }
+        return this._mq.size;
     }
 
     getQueue(): Map<string, ItemType>{

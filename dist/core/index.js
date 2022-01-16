@@ -1,27 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var node_worker_threads_pool_1 = require("node-worker-threads-pool");
+var pool_1 = require("./pool");
 var queue_1 = require("../queue");
 var path_1 = require("path");
 var EventEmitter = require("events");
 var Spider = (function () {
     function Spider(size, taskPath) {
-        this._mq = new queue_1.default();
-        this._pool = new node_worker_threads_pool_1.StaticPool({
-            size: size,
-            task: (0, path_1.resolve)(__dirname, 'worker.js'),
-            workerData: {
-                taskPath: taskPath
-            }
-        });
-        this._events = new EventEmitter();
-    }
-    Spider.prototype.runTask = function (taskName, data) {
         var _this = this;
-        this._pool.exec({
-            taskName: taskName,
-            data: data
-        }, 60000).then(function (res) {
+        this._roll = null;
+        this._mq = new queue_1.default();
+        this.events = new EventEmitter();
+        this._fristTask = true;
+        this._pool = new pool_1.default(size, (0, path_1.resolve)(__dirname, 'worker.js'), {
+            taskPath: taskPath
+        });
+        this._pool.events.on('message', function (res) {
             var type = res.type, result = res.result;
             switch (type) {
                 case 'queue':
@@ -29,32 +22,45 @@ var Spider = (function () {
                         nextName: result.nextName,
                         params: result.data
                     });
-                    _this._events.emit('next', result);
+                    _this.events.emit('next', result);
+                    if (_this._fristTask) {
+                        _this.rollTask();
+                        _this._fristTask = false;
+                    }
                     break;
                 case 'done':
-                    _this.nextTask();
-                    _this._events.emit('data', res);
+                    _this.events.emit('data', res);
                     break;
                 case 'error':
-                    _this._events.emit('error', res);
+                    _this.events.emit('error', res);
                     break;
             }
-        }).catch(function (err) {
-            if ((0, node_worker_threads_pool_1.isTimeoutError)(err))
-                return _this._events.emit('TimeoutError', err);
-            _this._events.emit('error', err);
+        });
+    }
+    Spider.prototype.runTask = function (taskName, data) {
+        this._pool.exec("1", {
+            taskName: taskName,
+            data: data
         });
         return this;
     };
     Spider.prototype.nextTask = function () {
-        var _params = this._mq.popQueue();
-        if (_params) {
-            var _a = _params.data, nextName = _a.nextName, params = _a.params;
-            this.runTask(nextName, params);
+        var tid = this._pool.findAvailableThread();
+        if (typeof tid === 'string') {
+            var _params = this._mq.popQueue();
+            if (_params) {
+                var _a = _params.data, nextName = _a.nextName, params = _a.params;
+                this._pool.exec(tid, { taskName: nextName, data: params });
+            }
+            else {
+                clearInterval(this._roll);
+                this.exit();
+                console.log('queueList is empty！');
+            }
         }
-        else {
-            this.exit();
-        }
+    };
+    Spider.prototype.rollTask = function () {
+        this._roll = setInterval(this.nextTask.bind(this), 300);
     };
     Spider.prototype.exit = function () {
         this._pool.destroy();

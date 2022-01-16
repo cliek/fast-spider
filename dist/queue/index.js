@@ -33,19 +33,10 @@ var LinkQueueMap = (function () {
             this._front = this._mq.get(current.next || null);
             return current;
         }
-        else {
-            var current = this._front || this._rear;
-            this._front = this._rear = null;
-            return current;
-        }
+        return null;
     };
     LinkQueueMap.prototype.size = function () {
-        if (this._front) {
-            return this._mq.size + 1;
-        }
-        else {
-            return this._mq.size;
-        }
+        return this._mq.size;
     };
     LinkQueueMap.prototype.getQueue = function () {
         return this._mq;
