@@ -3,15 +3,25 @@ import LinkQueueMap from '../queue';
 import { resolve } from 'path';
 import * as EventEmitter from 'events';
 
+declare type SpiderOptions = {
+    isExit: boolean
+}
+
 class Spider {
     public _pool: Pool;
     protected _fristTask: boolean;
-    public _roll: NodeJS.Timer | null = null;
+    protected _roll: NodeJS.Timer | null = null;
+    protected _roll_next: NodeJS.Timer | null = null;
+    protected _option: SpiderOptions | null;
     public _mq: LinkQueueMap;
     readonly events: EventEmitter;
 
-    constructor(size: number, taskPath: string) {
+    constructor(size: number, taskPath: string, opt?: SpiderOptions) {
         this._mq = new LinkQueueMap();
+        this._option = {
+            isExit: true,
+            ...opt
+        };
         this.events = new EventEmitter();
         this._fristTask = true;
         this._pool = new Pool(size, resolve(__dirname, 'worker.js'),{
@@ -33,8 +43,9 @@ class Spider {
                     break;
                 case 'done':
                     this.events.emit('data', res);
-                    if(this._fristTask){
+                    if(this._fristTask && this._option.isExit){
                         this.exit();
+                        this.events.emit('exit');
                     }
                     break;
                 case 'error':
@@ -59,10 +70,13 @@ class Spider {
             if(_params){
                 const { nextName, params } = _params.data;
                 this._pool.exec(tid, {taskName: nextName, data: params });
-            }else{
-                clearInterval(this._roll);
-                this.exit();
+                if(this._roll_next) clearTimeout(this._roll_next);
+            }else if (this._option?.isExit){
                 console.log('queueList is empty！');
+                this._roll_next = setTimeout(() => {
+                    clearInterval(this._roll);
+                    this.exit();
+                }, 5000);
             }
         }
         
