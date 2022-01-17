@@ -7,7 +7,7 @@ declare type allThreadsType = {
     [k:string]: Thread
 }
 
-declare type ResultType = {
+export declare type ResultType = {
     nextName: string,
     data: DataType
 }

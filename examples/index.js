@@ -1,4 +1,4 @@
-import Spider from "../dist";
+import Spider from "fast-spider";
 
 const S = new Spider(5, './tasks/index.js').runTask('aa');
 

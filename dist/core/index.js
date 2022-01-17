@@ -30,6 +30,9 @@ var Spider = (function () {
                     break;
                 case 'done':
                     _this.events.emit('data', res);
+                    if (_this._fristTask) {
+                        _this.exit();
+                    }
                     break;
                 case 'error':
                     _this.events.emit('error', res);

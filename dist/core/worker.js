@@ -30,6 +30,6 @@ parentPort.on('message', async(data) => {
             });
         }
     } else {
-        console.error('no task exists' + taskName);
+        console.error('no task exists: ' + taskName);
     }
 });

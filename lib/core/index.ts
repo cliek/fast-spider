@@ -4,7 +4,6 @@ import { resolve } from 'path';
 import * as EventEmitter from 'events';
 
 class Spider {
-
     public _pool: Pool;
     protected _fristTask: boolean;
     public _roll: NodeJS.Timer | null = null;
@@ -34,6 +33,9 @@ class Spider {
                     break;
                 case 'done':
                     this.events.emit('data', res);
+                    if(this._fristTask){
+                        this.exit();
+                    }
                     break;
                 case 'error':
                     this.events.emit('error', res);
