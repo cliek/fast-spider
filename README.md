@@ -144,7 +144,7 @@ spider.events.on('data', function(res)=>{
 ```
 ## 模块说明
 ### Task模块-任务模块
-#### addTasks(taskName, callBack(params:object | string, next(nextTaskName: string, result: object | string ))): boolean | object
+#### addTask(taskName, callBack(params:object | string, next(nextTaskName: string, result: object | string ))): boolean | object
 `taskName` : `string `
 
 任务名称,用于命名每个任务名称（不可重复）
