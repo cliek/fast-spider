@@ -1,42 +1,27 @@
-const { Task } = require('../../dist/index');
+const { Task } = require("fast-spider");
+const superagent = require("superagent");
+const cherrio = require('cheerio');
+const tasks = new Task();
 
-const task = new Task();
-
-task.addTask('aa', function(params, cb){
-    // 模拟创建100+页面的数据
-    for (let index = 0; index < 10; index++) {
-        if(index == 3) throw '测试错误';
-        cb({
-            nextName: 'bb',
-            data: index + 'page'
+tasks.addTask('getBaidu', async()=> {
+    try {
+        const result = await superagent.get("https://top.baidu.com/board?tab=realtime");
+        const $ = cherrio.load(result.text);
+        const resultArr = [];
+        $(".category-wrap_iQLoo").each((i, el)=>{
+            resultArr.push({
+                title: $(el).find('.c-single-text-ellipsis').text(),
+                image: $(el).find('.img-wrapper_29V76 img').attr('src'),
+                description: $(el).find('.large_nSuFU').prop('firstChild').nodeValue,
+                hotNum: $(el).find('.hot-index_1Bl1a').text(),
+                hotType: $(el).find(".hot-tag_1G080").text(),
+                link: $(el).find(".img-wrapper_29V76").attr("href")
+            })
         })
-    }
-    // return {aa:1}
-})
-
-task.addTask('bb', function(params, cb){
-    // 第二个模拟
-    for (let index = 0; index < 3; index++) {
-        cb({
-            nextName: 'cc',
-            data: "bb" + index + params
-        })
-    }
-    return {aa:1}
-})
-
-task.addTask('cc', function(params, cb){
-    cb({
-        nextName: 'dd',
-        data: "cc" + params
-    })
-    return {aa:1}
-})
-
-task.addTask('dd', function(params, cb){
-    return {
-        data: "dd" + params
+        return resultArr;
+    } catch (error) {
+        throw error;
     }
 })
 
-module.exports = task;
+module.exports = tasks;

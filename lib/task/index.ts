@@ -1,5 +1,3 @@
-import { ResultType } from '../core/pool';
-
 export type TaskType = {
     [key:string]: Function
 }
@@ -12,7 +10,7 @@ class Tasks {
         this._task = {}
     }
 
-    addTask(taskName: string, fn: (params: object|undefined, cb: (params: ResultType)=>void)=>object | boolean): boolean | TaskType {
+    addTask(taskName: string, fn: (params: object|undefined, cb: (nextTaskName: string, data: object)=>void)=>object | boolean): boolean | TaskType {
         if(this._task.hasOwnProperty(taskName)) {
             console.error(taskName + " is already exists");
             return false;

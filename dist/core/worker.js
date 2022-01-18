@@ -9,22 +9,22 @@ parentPort.on('message', async(data) => {
     const tasks = Tasks.getTasks();
     if(tasks.hasOwnProperty(taskName)){
         try {
-            const result = await tasks[taskName](params, (data)=>{
+            const result = await tasks[taskName](params, (nextTaskName, data)=>{
                 parentPort.postMessage({
+                    nextTaskName,
                     type: 'queue',
                     result: data
                 });
             });
             // return the result to main thread.
-            if(result){
-                parentPort.postMessage({
-                    taskName: taskName,
-                    type: 'done',
-                    result
-                });
-            }
+            parentPort.postMessage({
+                taskName: taskName,
+                type: 'done',
+                result
+            });
         } catch (error) {
             parentPort.postMessage({
+                taskName: taskName,
                 type: 'error',
                 result: error
             });

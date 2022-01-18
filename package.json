@@ -15,7 +15,7 @@
     "test": "jest",
     "build": "tsc",
     "dev": "node --loader ts-node/esm ./index.ts",
-    "deve": "cd examples && babel-node ./index.js"
+    "deve": "cd examples-test && babel-node ./index.js"
   },
   "license": "MIT",
   "dependencies": {
