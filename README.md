@@ -349,7 +349,7 @@ const spider = new Spider(1, './tasks/index.js', {
 // └───────────────────────── second (0 - 59, OPTIONAL)
 // 当前示例表示每30s会自动触发一次任务
 const job = schedule.scheduleJob('*/30 * * * * *', function(){
-    S.runTask('getBaidu');
+    spider.runTask('getBaidu');
     console.log('spider -> ' + new Date())
 });
 
